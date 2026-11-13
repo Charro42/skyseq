@@ -24,6 +24,10 @@ dependencies {
 
     // Only needed to compile the Mod Menu entry point. Not bundled; Mod Menu is optional at runtime.
     compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    // GLFW comes from the game at runtime. These are only here so the code compiles.
+    compileOnly "org.lwjgl:lwjgl:3.3.3"
+    compileOnly "org.lwjgl:lwjgl-glfw:3.3.3"
 }
 
 processResources {
@@ -41,4 +45,48 @@ tasks.withType(JavaCompile).configureEach {
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+}
+
+// Diagnostic: prints the real Minecraft 26.3 method names into the build log so the code can be matched to them.
+// Runs after compileJava even when compileJava fails. Safe to delete once the mod builds.
+tasks.register('apiDump', Exec) {
+    ignoreExitValue = true
+    doFirst {
+        def files = configurations.compileClasspath.files
+        println "=== CLASSPATH ENTRIES (minecraft / lwjgl) ==="
+        files.each { f ->
+            def n = f.name.toLowerCase()
+            if (n.contains('minecraft') || n.contains('lwjgl')) {
+                println f.name
+            }
+        }
+        println "=== API DUMP START ==="
+        def classes = [
+            'net.minecraft.client.Minecraft',
+            'com.mojang.blaze3d.platform.InputConstants',
+            'com.mojang.blaze3d.platform.InputConstants$Type',
+            'com.mojang.blaze3d.platform.InputConstants$Key',
+            'com.mojang.blaze3d.platform.Window',
+            'net.minecraft.client.KeyMapping',
+            'net.minecraft.client.MouseHandler',
+            'net.minecraft.client.gui.Gui',
+            'net.minecraft.client.gui.screens.Screen',
+            'net.minecraft.client.gui.components.AbstractWidget',
+            'net.minecraft.client.gui.components.AbstractStringWidget',
+            'net.minecraft.client.gui.components.StringWidget',
+            'net.minecraft.client.gui.components.EditBox',
+            'net.minecraft.client.gui.components.Button',
+            'net.minecraft.client.player.LocalPlayer',
+            'net.minecraft.client.multiplayer.ClientPacketListener',
+            'net.minecraft.client.input.KeyEvent',
+            'net.minecraft.client.input.MouseButtonEvent',
+            'net.minecraft.client.input.MouseButtonInfo'
+        ]
+        def cp = files.collect { it.absolutePath }.join(File.pathSeparator)
+        commandLine(['javap', '-protected', '-cp', cp] + classes)
+    }
+}
+
+tasks.named('compileJava') {
+    finalizedBy 'apiDump'
 }
