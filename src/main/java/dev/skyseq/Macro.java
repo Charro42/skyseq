@@ -27,7 +27,7 @@ public final class Macro {
     public boolean enabled = true;
     /** true = mouse button, false = keyboard key. */
     public boolean mouse = false;
-    /** GLFW key or mouse-button code. -1 = unbound. */
+    /** Minecraft key or mouse-button code (InputConstants). -1 = unbound. */
     public int code = -1;
     public Mode mode = Mode.ONCE;
     /** CYCLE mode: comma-separated values. "{n}" in steps becomes the current value. */

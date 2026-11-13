@@ -29,7 +29,7 @@ public final class MacroEditScreen extends Screen {
         int left = (this.width - cw) / 2;
         int half = cw / 2;
 
-        this.addRenderableWidget(new StringWidget(left, 8, cw, 9, this.title, this.font).alignCenter());
+        this.addRenderableWidget(new StringWidget(left, 8, cw, 9, this.title, this.font));
 
         // Row 1: name + bind button
         EditBox name = new EditBox(this.font, left, 22, half - 2, 20, Component.literal("Name"));
@@ -65,14 +65,14 @@ public final class MacroEditScreen extends Screen {
         int cdW = 70;
         int enW = 50;
         int midW = cw - modeW - cdW - enW - 12;
-        this.addRenderableWidget(new StringWidget(left, 47, modeW, 9, Component.literal("Mode"), this.font).alignLeft());
+        this.addRenderableWidget(new StringWidget(left, 47, modeW, 9, Component.literal("Mode"), this.font));
         String midTitle = switch (macro.mode) {
             case CYCLE -> "Cycle values ({n}) e.g. 1,2,3";
             case REPEAT -> "Repeat times";
             default -> "";
         };
-        this.addRenderableWidget(new StringWidget(left + modeW + 4, 47, midW, 9, Component.literal(midTitle), this.font).alignLeft());
-        this.addRenderableWidget(new StringWidget(left + modeW + midW + 8, 47, cdW, 9, Component.literal("Cooldown ms"), this.font).alignLeft());
+        this.addRenderableWidget(new StringWidget(left + modeW + 4, 47, midW, 9, Component.literal(midTitle), this.font));
+        this.addRenderableWidget(new StringWidget(left + modeW + midW + 8, 47, cdW, 9, Component.literal("Cooldown ms"), this.font));
 
         // Row 2 controls
         this.addRenderableWidget(Button.builder(Component.literal(macro.mode.label), b -> {
@@ -92,7 +92,6 @@ public final class MacroEditScreen extends Screen {
         } else if (macro.mode == Macro.Mode.REPEAT) {
             EditBox times = new EditBox(this.font, left + modeW + 4, 57, midW, 20, Component.literal("Repeat"));
             times.setMaxLength(2);
-            times.setFilter(s -> s.matches("\\d{0,2}"));
             times.setValue(String.valueOf(macro.repeatCount));
             times.setResponder(v -> macro.repeatCount = parse(v, 1, 50));
             this.addRenderableWidget(times);
@@ -100,7 +99,6 @@ public final class MacroEditScreen extends Screen {
 
         EditBox cooldown = new EditBox(this.font, left + modeW + midW + 8, 57, cdW, 20, Component.literal("Cooldown"));
         cooldown.setMaxLength(5);
-        cooldown.setFilter(s -> s.matches("\\d{0,5}"));
         cooldown.setValue(String.valueOf(macro.cooldownMs));
         cooldown.setResponder(v -> macro.cooldownMs = parse(v, 0, 60000));
         this.addRenderableWidget(cooldown);
@@ -119,11 +117,11 @@ public final class MacroEditScreen extends Screen {
         int gap = 3;
         int textW = cw - typeW - delayW - 3 * small - 4 * gap;
         int headY = 83;
-        this.addRenderableWidget(new StringWidget(left, headY, typeW, 9, Component.literal("Action"), this.font).alignLeft());
+        this.addRenderableWidget(new StringWidget(left, headY, typeW, 9, Component.literal("Action"), this.font));
         this.addRenderableWidget(new StringWidget(left + typeW + gap, headY, textW, 9,
-                Component.literal("Command / key / button / menu title"), this.font).alignLeft());
+                Component.literal("Command / key / button / menu title"), this.font));
         this.addRenderableWidget(new StringWidget(left + typeW + textW + 2 * gap, headY, delayW, 9,
-                Component.literal("Delay ms"), this.font).alignLeft());
+                Component.literal("Delay ms"), this.font));
 
         int rowsTop = 95;
         int rowH = 22;
@@ -163,7 +161,6 @@ public final class MacroEditScreen extends Screen {
 
             EditBox delay = new EditBox(this.font, x, y, delayW, 20, Component.literal("Delay"));
             delay.setMaxLength(5);
-            delay.setFilter(v -> v.matches("\\d{0,5}"));
             delay.setValue(String.valueOf(s.delayMs));
             delay.setResponder(v -> s.delayMs = parse(v, 0, 60000));
             this.addRenderableWidget(delay);
@@ -192,7 +189,7 @@ public final class MacroEditScreen extends Screen {
             this.rebuildWidgets();
         }).bounds(left, pagerY, 60, 20).build()).active = page > 0;
         this.addRenderableWidget(new StringWidget(left + 60, pagerY + 6, cw - 120, 9,
-                Component.literal("Steps - page " + (page + 1) + " / " + pages + "  (" + count + " steps)"), this.font).alignCenter());
+                Component.literal("Steps - page " + (page + 1) + " / " + pages + "  (" + count + " steps)"), this.font));
         this.addRenderableWidget(Button.builder(Component.literal("Next >"), b -> {
             page++;
             this.rebuildWidgets();
@@ -237,7 +234,7 @@ public final class MacroEditScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parent);
+        this.minecraft.setScreenAndShow(parent);
     }
 
     @Override

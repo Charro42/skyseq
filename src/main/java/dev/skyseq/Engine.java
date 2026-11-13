@@ -10,7 +10,6 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * Watches for keybind presses and runs their sequences, one step per client tick (50 ms).
@@ -35,14 +34,9 @@ public final class Engine {
             }
             pendingRelease.clear();
         }
-        if (mc.getWindow() == null) {
-            return;
-        }
-        long window = mc.getWindow().handle();
-
         // The bind button in the config screen also works from the title screen.
         if (Capture.active()) {
-            Capture.poll(window);
+            Capture.poll();
             return;
         }
         if (mc.player == null) {
@@ -54,10 +48,10 @@ public final class Engine {
             active.tick(mc);
         }
 
-        boolean allow = Config.enabled && mc.screen == null && active == null;
+        boolean allow = Config.enabled && mc.gui.screen() == null && active == null;
         long now = System.nanoTime();
         for (Macro m : Config.macros) {
-            boolean down = m.enabled && m.code >= 0 && isDown(window, m);
+            boolean down = m.enabled && m.code >= 0 && isDown(m);
             boolean pressed = down && !m.wasDown;
             m.wasDown = down;
             if (pressed && allow && now >= m.cooldownUntil && !m.steps.isEmpty()) {
@@ -67,11 +61,11 @@ public final class Engine {
         }
     }
 
-    private static boolean isDown(long window, Macro m) {
+    private static boolean isDown(Macro m) {
         if (m.mouse) {
-            return GLFW.glfwGetMouseButton(window, m.code) == GLFW.GLFW_PRESS;
+            return MouseState.isDown(m.code);
         }
-        return GLFW.glfwGetKey(window, m.code) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(m.code);
     }
 
     private static long ms(int value) {
@@ -140,7 +134,7 @@ public final class Engine {
                 return;
             }
             if (wait == Wait.CLOSE) {
-                if (mc.screen == null) {
+                if (mc.gui.screen() == null) {
                     wait = Wait.NONE;
                     notBefore = now + ms(waitStep.delayMs);
                 } else if (now > deadline) {
@@ -160,8 +154,8 @@ public final class Engine {
                 case KEY -> pressKey(mc, Keys.parseKey(resolve(s.text)));
                 case CLICK -> click(mc, Keys.parseMouse(resolve(s.text)));
                 case ESCAPE -> {
-                    if (mc.screen != null) {
-                        mc.screen.onClose();
+                    if (mc.gui.screen() != null) {
+                        mc.gui.screen().onClose();
                     }
                 }
                 case WAIT -> {
@@ -214,13 +208,13 @@ public final class Engine {
     }
 
     private static boolean screenMatches(Minecraft mc, String filter) {
-        if (mc.screen == null) {
+        if (mc.gui.screen() == null) {
             return false;
         }
         if (filter == null || filter.isBlank()) {
             return true;
         }
-        String title = mc.screen.getTitle().getString().toLowerCase(Locale.ROOT);
+        String title = mc.gui.screen().getTitle().getString().toLowerCase(Locale.ROOT);
         return title.contains(filter.trim().toLowerCase(Locale.ROOT));
     }
 
@@ -240,12 +234,12 @@ public final class Engine {
         if (code < 0) {
             return;
         }
-        if (mc.screen != null) {
-            KeyEvent event = new KeyEvent(code, GLFW.glfwGetKeyScancode(code), 0);
-            mc.screen.keyPressed(event);
-            mc.screen.keyReleased(event);
+        if (mc.gui.screen() != null) {
+            KeyEvent event = new KeyEvent(code, code, 0);
+            mc.gui.screen().keyPressed(event);
+            mc.gui.screen().keyReleased(event);
         } else {
-            InputConstants.Key key = InputConstants.Type.KEYSYM.getOrCreate(code);
+            InputConstants.Key key = InputConstants.Type.KEYBOARD.getOrCreate(code);
             KeyMapping.set(key, true);
             KeyMapping.click(key);
             pendingRelease.add(key);
@@ -256,12 +250,12 @@ public final class Engine {
         if (button < 0) {
             return;
         }
-        if (mc.screen != null) {
-            double x = mc.mouseHandler.xpos() * mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth();
-            double y = mc.mouseHandler.ypos() * mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight();
+        if (mc.gui.screen() != null) {
+            double x = mc.mouseHandler.getScaledXPos(mc.getWindow());
+            double y = mc.mouseHandler.getScaledYPos(mc.getWindow());
             MouseButtonEvent event = new MouseButtonEvent(x, y, new MouseButtonInfo(button, 0));
-            mc.screen.mouseClicked(event, false);
-            mc.screen.mouseReleased(event);
+            mc.gui.screen().mouseClicked(event, false);
+            mc.gui.screen().mouseReleased(event);
         } else {
             InputConstants.Key key = InputConstants.Type.MOUSE.getOrCreate(button);
             KeyMapping.set(key, true);
@@ -272,7 +266,7 @@ public final class Engine {
 
     private static void status(Minecraft mc, String message) {
         if (Config.showStatus && mc.player != null) {
-            mc.player.displayClientMessage(Component.literal("[SkySeq] " + message), true);
+            mc.player.sendOverlayMessage(Component.literal("[SkySeq] " + message));
         }
     }
 }

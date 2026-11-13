@@ -9,7 +9,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.loader.api.FabricLoader;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 /** Loads and saves everything to config/skyseq.json. */
 public final class Config {
@@ -109,7 +109,7 @@ public final class Config {
         m.name = "Loadout cycle";
         m.enabled = false;
         m.mouse = true;
-        m.code = GLFW.GLFW_MOUSE_BUTTON_5;
+        m.code = InputConstants.MOUSE_BUTTON_5;
         m.mode = Macro.Mode.CYCLE;
         m.cycleValues = "1,2,3";
         m.steps.add(new Step(Step.Type.COMMAND, "/loadout", 100));

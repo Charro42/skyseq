@@ -26,7 +26,7 @@ public final class MacroListScreen extends Screen {
         int top = 28;
         int rowH = 24;
 
-        this.addRenderableWidget(new StringWidget(left, 10, cw, 9, this.title, this.font).alignCenter());
+        this.addRenderableWidget(new StringWidget(left, 10, cw, 9, this.title, this.font));
 
         int perPage = Math.max(1, (this.height - 84 - top) / rowH);
         int count = Config.macros.size();
@@ -50,7 +50,7 @@ public final class MacroListScreen extends Screen {
                     }).bounds(left, y, 40, 20).build());
 
             this.addRenderableWidget(Button.builder(Component.literal(label(m)), b -> {
-                this.minecraft.setScreen(new MacroEditScreen(this, m));
+                this.minecraft.setScreenAndShow(new MacroEditScreen(this, m));
             }).bounds(left + 44, y, cw - 88, 20).build());
 
             boolean armed = armedDelete == idx;
@@ -76,7 +76,7 @@ public final class MacroListScreen extends Screen {
             this.rebuildWidgets();
         }).bounds(left, pagerY, 60, 20).build()).active = page > 0;
         this.addRenderableWidget(new StringWidget(left + 60, pagerY + 6, cw - 120, 9,
-                Component.literal("Page " + (page + 1) + " / " + pages + "  (" + count + " keybinds)"), this.font).alignCenter());
+                Component.literal("Page " + (page + 1) + " / " + pages + "  (" + count + " keybinds)"), this.font));
         this.addRenderableWidget(Button.builder(Component.literal("Next >"), b -> {
             page++;
             armedDelete = -1;
@@ -109,7 +109,7 @@ public final class MacroListScreen extends Screen {
             m.steps.add(new Step(Step.Type.COMMAND, "", 150));
             Config.macros.add(m);
             Config.save();
-            this.minecraft.setScreen(new MacroEditScreen(this, m));
+            this.minecraft.setScreenAndShow(new MacroEditScreen(this, m));
         }).bounds(left, bottomY, cw / 2 - 2, 20).build());
         this.addRenderableWidget(Button.builder(Component.literal("Done"), b -> this.onClose())
                 .bounds(left + cw / 2 + 2, bottomY, cw / 2 - 2, 20).build());
@@ -122,7 +122,7 @@ public final class MacroListScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parent);
+        this.minecraft.setScreenAndShow(parent);
     }
 
     @Override

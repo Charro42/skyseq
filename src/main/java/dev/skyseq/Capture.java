@@ -1,7 +1,7 @@
 package dev.skyseq;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.function.Consumer;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * "Press a key or mouse button" capture for the bind button. Polled from the client tick, so the
@@ -29,35 +29,28 @@ public final class Capture {
         callback = null;
     }
 
-    static void poll(long window) {
+    static void poll() {
         Consumer<int[]> cb = callback;
         if (cb == null) {
             return;
         }
-        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_ESCAPE) == GLFW.GLFW_PRESS) {
+        if (InputConstants.isKeyDown(Keys.escape())) {
             callback = null;
             cb.accept(null);
             return;
         }
 
         int foundKey = -1;
-        for (int k = GLFW.GLFW_KEY_SPACE; k <= GLFW.GLFW_KEY_LAST; k++) {
-            if (k != GLFW.GLFW_KEY_ESCAPE && GLFW.glfwGetKey(window, k) == GLFW.GLFW_PRESS) {
+        for (int k : Keys.allKeys()) {
+            if (InputConstants.isKeyDown(k)) {
                 foundKey = k;
                 break;
             }
         }
-        int foundMouse = -1;
-        boolean leftOrRightDown = false;
-        for (int b = 0; b <= GLFW.GLFW_MOUSE_BUTTON_LAST; b++) {
-            if (GLFW.glfwGetMouseButton(window, b) == GLFW.GLFW_PRESS) {
-                if (b <= 1) {
-                    leftOrRightDown = true;
-                } else if (foundMouse < 0) {
-                    foundMouse = b;
-                }
-            }
-        }
+        int left = InputConstants.MOUSE_BUTTON_LEFT;
+        int right = InputConstants.MOUSE_BUTTON_RIGHT;
+        int foundMouse = MouseState.firstExtraButton(left, right);
+        boolean leftOrRightDown = MouseState.isDown(left) || MouseState.isDown(right);
 
         // Wait until everything (including the click on the bind button) has been released first.
         if (!armed) {

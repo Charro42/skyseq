@@ -11,6 +11,7 @@
     "client": ["dev.skyseq.SkySeqClient"],
     "modmenu": ["dev.skyseq.ModMenuIntegration"]
   },
+  "mixins": ["skyseq.mixins.json"],
   "depends": {
     "fabricloader": ">=0.19.0",
     "minecraft": ">=26.3",
