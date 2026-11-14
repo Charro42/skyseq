@@ -2,8 +2,10 @@ package dev.skyseq;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import dev.skyseq.mixin.KeyboardHandlerAccessor;
@@ -23,6 +25,7 @@ public final class Engine {
     private enum Wait { NONE, OPEN, CLOSE }
 
     private static Runner active;
+    private static Hold hold;
     private static final List<InputConstants.Key> pendingRelease = new ArrayList<>();
     private static final List<KeyEvent> pendingKeyReleases = new ArrayList<>();
 
@@ -59,6 +62,17 @@ public final class Engine {
             active.tick(mc);
         }
 
+        boolean holdEnded = false;
+        if (hold != null) {
+            String why = hold.tick(mc);
+            if (why != null) {
+                hold.release();
+                status(mc, hold.macro.name + ": released (" + why + ")");
+                hold = null;
+                holdEnded = true;
+            }
+        }
+
         boolean allow = Config.enabled && mc.gui.screen() == null && active == null;
         long now = System.nanoTime();
         Macro pick = null;
@@ -66,8 +80,12 @@ public final class Engine {
             boolean down = m.enabled && m.code >= 0 && isDown(m);
             boolean pressed = down && !m.wasDown;
             m.wasDown = down;
-            if (!pressed || !allow || now < m.cooldownUntil || m.steps.isEmpty()) {
+            boolean isHold = m.mode == Macro.Mode.HOLD;
+            if (!pressed || !allow || now < m.cooldownUntil || (!isHold && m.steps.isEmpty())) {
                 continue;
+            }
+            if (isHold && holdEnded) {
+                continue; // this press just switched an active hold off
             }
             boolean restricted = m.areas != null && !m.areas.isBlank();
             if (restricted && !Area.matches(m.areas)) {
@@ -79,7 +97,113 @@ public final class Engine {
             }
         }
         if (pick != null) {
-            active = new Runner(pick);
+            if (pick.mode == Macro.Mode.HOLD) {
+                startHold(mc, pick);
+            } else {
+                active = new Runner(pick);
+            }
+        }
+    }
+
+    private static void startHold(Minecraft mc, Macro m) {
+        int[] target = Keys.parseHold(m.holdTarget);
+        if (target == null) {
+            status(mc, m.name + ": set what to hold first");
+            return;
+        }
+        hold = new Hold(m, target[0] == 1, target[1]);
+        hold.begin();
+        status(mc, m.name + ": holding " + m.holdTarget.trim());
+    }
+
+    /**
+     * Toggle hold: keeps a key or mouse button held down until you do anything else.
+     * Stops on any new key press that is not in the allowed list, any new mouse click, a menu opening,
+     * leaving the world, or the time limit.
+     */
+    private static final class Hold {
+        final Macro macro;
+        final boolean mouse;
+        final int code;
+        final InputConstants.Key key;
+        final Set<Integer> allowed = new HashSet<>();
+        final long until;
+        Set<Integer> prevKeys = new HashSet<>();
+        Set<Integer> prevMouse;
+
+        Hold(Macro macro, boolean mouse, int code) {
+            this.macro = macro;
+            this.mouse = mouse;
+            this.code = code;
+            this.key = mouse ? InputConstants.Type.MOUSE.getOrCreate(code) : InputConstants.Type.KEYSYM.getOrCreate(code);
+            if (macro.holdAllow != null) {
+                for (String token : macro.holdAllow.split(",")) {
+                    int k = Keys.parseKey(token);
+                    if (k >= 0) {
+                        allowed.add(k);
+                    }
+                }
+            }
+            if (!mouse) {
+                allowed.add(code);
+            }
+            this.until = System.nanoTime() + ms(Math.max(1, Math.min(600, macro.holdSeconds)) * 1000);
+        }
+
+        void begin() {
+            // Keys/buttons already down when the hold starts (like the trigger itself) must not count as new presses.
+            for (int k : Keys.allKeys()) {
+                if (Keys.isDown(k)) {
+                    prevKeys.add(k);
+                }
+            }
+            prevMouse = MouseState.snapshot();
+            KeyMapping.set(key, true);
+            if (mouse) {
+                KeyMapping.click(key);
+            }
+        }
+
+        /** Returns why the hold should stop, or null to keep holding. */
+        String tick(Minecraft mc) {
+            if (mc.player == null) {
+                return "left the world";
+            }
+            if (mc.gui.screen() != null) {
+                return "menu opened";
+            }
+            if (System.nanoTime() > until) {
+                return "time limit";
+            }
+            Set<Integer> nowKeys = new HashSet<>();
+            String reason = null;
+            for (int k : Keys.allKeys()) {
+                if (Keys.isDown(k)) {
+                    nowKeys.add(k);
+                    if (!prevKeys.contains(k) && !allowed.contains(k)) {
+                        reason = "you pressed " + Keys.keyName(k);
+                    }
+                }
+            }
+            prevKeys = nowKeys;
+            Set<Integer> nowMouse = MouseState.snapshot();
+            for (int b : nowMouse) {
+                if (!prevMouse.contains(b)) {
+                    reason = "mouse click";
+                }
+            }
+            prevMouse = nowMouse;
+            if (reason != null) {
+                return reason;
+            }
+            // The game resets key states when menus close and when physical keys are released, so keep re-applying.
+            KeyMapping.set(key, true);
+            return null;
+        }
+
+        void release() {
+            KeyMapping.set(key, false);
+            KeyMapping.setAll();
         }
     }
 

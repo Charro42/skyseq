@@ -71,3 +71,10 @@ In **Cycle** (or **Repeat**) mode the editor shows tabs: **All | n=1 | n=2 | n=3
 - A number tab shows exactly what will run for that number (shared steps plus the ones tagged for it).
   Steps you add while a number tab is open are tagged for that number automatically.
 - Click **Apply** after changing the cycle values to refresh the tabs.
+
+## Hold mode
+
+Set a keybind's mode to **Hold**, type what to hold (`w`, `shift`, `h`, `left click`, `mouse4` ...) and a time limit in seconds.
+Press the trigger to start holding; press it again to let go. The hold also stops when you press any key that is not in the
+"Keys that do NOT stop the hold" list (default `w,a,s,d`), click a mouse button, open a menu, leave the world, or hit the time limit.
+Note: holding keys for long periods (for example farming) can be against Hypixel's rules, so use it sensibly.

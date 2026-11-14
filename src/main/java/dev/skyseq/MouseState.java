@@ -37,6 +37,11 @@ public final class MouseState {
         return -1;
     }
 
+    /** Copy of the buttons currently held. */
+    public static synchronized Set<Integer> snapshot() {
+        return new HashSet<>(DOWN);
+    }
+
     public static synchronized boolean anyDown() {
         return !DOWN.isEmpty();
     }

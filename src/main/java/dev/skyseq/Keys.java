@@ -142,6 +142,38 @@ public final class Keys {
         };
     }
 
+    /** Parses a hold target: {0, keyCode} or {1, mouseButton}, or null. "left click", "rmb", "mouse4", "w", "shift" ... */
+    public static int[] parseHold(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String s = raw.trim().toLowerCase(Locale.ROOT).replace(" ", "");
+        if (s.isEmpty()) {
+            return null;
+        }
+        switch (s) {
+            case "leftclick", "lmb", "mouse1", "attack" -> {
+                return new int[] {1, InputConstants.MOUSE_BUTTON_LEFT};
+            }
+            case "rightclick", "rmb", "mouse2", "use" -> {
+                return new int[] {1, InputConstants.MOUSE_BUTTON_RIGHT};
+            }
+            case "middleclick", "mmb", "mouse3" -> {
+                return new int[] {1, InputConstants.MOUSE_BUTTON_MIDDLE};
+            }
+            case "mouse4" -> {
+                return new int[] {1, InputConstants.MOUSE_BUTTON_4};
+            }
+            case "mouse5" -> {
+                return new int[] {1, InputConstants.MOUSE_BUTTON_5};
+            }
+            default -> {
+            }
+        }
+        int key = parseKey(raw);
+        return key >= 0 ? new int[] {0, key} : null;
+    }
+
     public static String mouseName(int button) {
         if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             return "Left Click";

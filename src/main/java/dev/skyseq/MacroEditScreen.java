@@ -105,8 +105,8 @@ public final class MacroEditScreen extends Screen {
 
         // Row B: mode buttons, cooldown, enabled
         this.addRenderableWidget(new StringWidget(left, 43, 120, 9, Component.literal("What happens on each press"), this.font));
-        this.addRenderableWidget(new StringWidget(left + 196, 43, 80, 9, Component.literal("Cooldown ms"), this.font));
-        int mw = 62;
+        this.addRenderableWidget(new StringWidget(left + 244, 43, 80, 9, Component.literal("Cooldown ms"), this.font));
+        int mw = 58;
         Macro.Mode[] modes = Macro.Mode.values();
         for (int i = 0; i < modes.length; i++) {
             Macro.Mode mode = modes[i];
@@ -120,7 +120,7 @@ public final class MacroEditScreen extends Screen {
             button.active = !isSelected;
             this.addRenderableWidget(button);
         }
-        EditBox cooldown = new EditBox(this.font, left + 196, 53, 70, 20, Component.literal("Cooldown"));
+        EditBox cooldown = new EditBox(this.font, left + 244, 53, 60, 20, Component.literal("Cooldown"));
         cooldown.setMaxLength(5);
         cooldown.setValue(String.valueOf(macro.cooldownMs));
         cooldown.setResponder(v -> macro.cooldownMs = parse(v, 0, 60000));
@@ -134,7 +134,8 @@ public final class MacroEditScreen extends Screen {
                 }).bounds(left + cw - 84, 53, 84, 20).build());
 
         // Row C: cycle values / repeat count, and areas
-        boolean needsValueBox = macro.mode != Macro.Mode.ONCE;
+        boolean isHold = macro.mode == Macro.Mode.HOLD;
+        boolean needsValueBox = macro.mode != Macro.Mode.ONCE && !isHold;
         int areaX = needsValueBox ? left + half + 2 : left;
         int areaW = needsValueBox ? half - 2 : cw;
         if (needsValueBox) {
@@ -157,6 +158,22 @@ public final class MacroEditScreen extends Screen {
             this.addRenderableWidget(Button.builder(Component.literal("Apply"), b -> this.rebuildWidgets())
                     .bounds(left + half - 2 - 42, 87, 42, 20).build());
         }
+        if (isHold) {
+            areaX = left + half + 2;
+            areaW = half - 2;
+            this.addRenderableWidget(new StringWidget(left, 77, half, 9, Component.literal("Hold this  /  stop after (s)"), this.font));
+            EditBox target = new EditBox(this.font, left, 87, half - 2 - 46, 20, Component.literal("Hold target"));
+            target.setMaxLength(30);
+            target.setHint(Component.literal("w, shift, left click, mouse4"));
+            target.setValue(macro.holdTarget == null ? "" : macro.holdTarget);
+            target.setResponder(v -> macro.holdTarget = v);
+            this.addRenderableWidget(target);
+            EditBox secs = new EditBox(this.font, left + half - 2 - 42, 87, 42, 20, Component.literal("Seconds"));
+            secs.setMaxLength(3);
+            secs.setValue(String.valueOf(macro.holdSeconds));
+            secs.setResponder(v -> macro.holdSeconds = parse(v, 1, 600));
+            this.addRenderableWidget(secs);
+        }
         this.addRenderableWidget(new StringWidget(areaX, 77, areaW, 9,
                 Component.literal("Only in areas  (now: " + Area.describe() + ")"), this.font));
         EditBox areas = new EditBox(this.font, areaX, 87, areaW, 20, Component.literal("Areas"));
@@ -165,6 +182,29 @@ public final class MacroEditScreen extends Screen {
         areas.setValue(macro.areas == null ? "" : macro.areas);
         areas.setResponder(v -> macro.areas = v);
         this.addRenderableWidget(areas);
+
+        if (isHold) {
+            this.addRenderableWidget(new StringWidget(left, 113, cw, 9,
+                    Component.literal("Keys that do NOT stop the hold"), this.font));
+            EditBox allow = new EditBox(this.font, left, 123, cw, 20, Component.literal("Allowed keys"));
+            allow.setMaxLength(120);
+            allow.setHint(Component.literal("w,a,s,d"));
+            allow.setValue(macro.holdAllow == null ? "" : macro.holdAllow);
+            allow.setResponder(v -> macro.holdAllow = v);
+            this.addRenderableWidget(allow);
+            String[] info = {
+                "Press the trigger once to start holding, press it again to let go.",
+                "The hold also stops on any other key, any mouse click, a menu opening,",
+                "or when the time limit is reached.",
+                "Tip: add jump (space) or sneak to the allowed list if you want those to keep it."
+            };
+            for (int i = 0; i < info.length; i++) {
+                this.addRenderableWidget(new StringWidget(left, 152 + i * 12, cw, 9, Component.literal(info[i]), this.font));
+            }
+            this.addRenderableWidget(Button.builder(Component.literal("Done"), b -> this.onClose())
+                    .bounds(left, this.height - 26, cw, 20).build());
+            return;
+        }
 
         // Tabs
         int y = 113;

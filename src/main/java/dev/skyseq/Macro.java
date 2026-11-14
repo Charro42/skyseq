@@ -9,7 +9,8 @@ public final class Macro {
     public enum Mode {
         ONCE("Run once"),
         CYCLE("Cycle"),
-        REPEAT("Repeat");
+        REPEAT("Repeat"),
+        HOLD("Hold");
 
         public final String label;
 
@@ -38,6 +39,12 @@ public final class Macro {
     public int cooldownMs = 400;
     /** CYCLE mode: which value is used next. Saved so it survives restarts. */
     public int cycleIndex = 0;
+    /** HOLD mode: what to hold, e.g. "w", "shift", "left click", "mouse4". */
+    public String holdTarget = "";
+    /** HOLD mode: stop holding after this many seconds no matter what. */
+    public int holdSeconds = 60;
+    /** HOLD mode: keys you can still press without stopping the hold. */
+    public String holdAllow = "w,a,s,d";
     /** Only run in these SkyBlock areas (comma-separated). Blank = everywhere. */
     public String areas = "";
     public List<Step> steps = new ArrayList<>();
