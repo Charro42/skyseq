@@ -14,9 +14,10 @@ import net.minecraft.util.Mth;
 /**
  * Editor for one keybind.
  *
- * In Cycle / Repeat mode there is a row of tabs (All, 1, 2, 3 ...). "All" shows every step. A number tab shows only
- * the steps that run when n is that number (shared steps plus the ones tagged for it); steps added in a number tab
- * are tagged for that number. Each step also has a "When n" box for finer control, e.g. "1,3".
+ * In Cycle / Repeat mode there is a row of tabs (All, n=1, n=2 ...). "All" shows only the shared steps (they run for
+ * every number). A number tab shows the whole run for that number: shared steps (greyed, edit them in All) plus the
+ * steps that are only for that number (yellow, editable). Steps added in a number tab are tagged for that number, and
+ * the "When n" box lets one step cover several numbers, e.g. "1,3".
  */
 public final class MacroEditScreen extends Screen {
 
@@ -49,6 +50,10 @@ public final class MacroEditScreen extends Screen {
             }
         }
         return out;
+    }
+
+    private static boolean isShared(Step s) {
+        return s.when == null || s.when.isBlank();
     }
 
     private static Component selected(String text) {
@@ -176,18 +181,19 @@ public final class MacroEditScreen extends Screen {
 
         // Step list header
         int typeW = 84;
-        int whenW = hasTabs ? 44 : 0;
+        boolean showWhen = view != null;
+        int whenW = showWhen ? 44 : 0;
         int delayW = 46;
         int small = 18;
         int gap = 3;
-        int gaps = hasTabs ? 6 : 5;
+        int gaps = showWhen ? 6 : 5;
         int textW = cw - typeW - whenW - delayW - 3 * small - gaps * gap;
         int cx = left;
         this.addRenderableWidget(new StringWidget(cx, y, typeW, 9, Component.literal("Action"), this.font));
         cx += typeW + gap;
         this.addRenderableWidget(new StringWidget(cx, y, textW, 9, Component.literal("Command / key / button / menu title"), this.font));
         cx += textW + gap;
-        if (hasTabs) {
+        if (showWhen) {
             this.addRenderableWidget(new StringWidget(cx, y, whenW, 9, Component.literal("When n"), this.font));
             cx += whenW + gap;
         }
@@ -199,7 +205,8 @@ public final class MacroEditScreen extends Screen {
 
         List<Integer> visible = new ArrayList<>();
         for (int i = 0; i < macro.steps.size(); i++) {
-            if (view == null || macro.steps.get(i).appliesTo(view)) {
+            Step candidate = macro.steps.get(i);
+            if (view == null ? (!hasTabs || isShared(candidate)) : candidate.appliesTo(view)) {
                 visible.add(i);
             }
         }
@@ -214,14 +221,20 @@ public final class MacroEditScreen extends Screen {
             }
             int idx = visible.get(pos);
             Step s = macro.steps.get(idx);
+            boolean readOnly = view != null && isShared(s);
             int ry = rowsTop + row * rowH;
             int x = left;
 
-            this.addRenderableWidget(Button.builder(Component.literal(s.type.label), b ->
+            Component typeLabel = (view != null && !readOnly)
+                    ? Component.literal(s.type.label).withStyle(ChatFormatting.YELLOW)
+                    : Component.literal(s.type.label);
+            Button typeButton = Button.builder(typeLabel, b ->
                     this.minecraft.setScreenAndShow(new StepTypeScreen(this, type -> {
                         s.type = type;
                         this.rebuildWidgets();
-                    }))).bounds(x, ry, typeW, 20).build());
+                    }))).bounds(x, ry, typeW, 20).build();
+            typeButton.active = !readOnly;
+            this.addRenderableWidget(typeButton);
             x += typeW + gap;
 
             EditBox text = new EditBox(this.font, x, ry, textW, 20, Component.literal("Text"));
@@ -232,18 +245,20 @@ public final class MacroEditScreen extends Screen {
             if (usesText) {
                 text.setValue(s.text == null ? "" : s.text);
                 text.setResponder(v -> s.text = v);
-            } else {
+            }
+            if (!usesText || readOnly) {
                 text.setEditable(false);
             }
             this.addRenderableWidget(text);
             x += textW + gap;
 
-            if (hasTabs) {
+            if (showWhen) {
                 EditBox when = new EditBox(this.font, x, ry, whenW, 20, Component.literal("When"));
                 when.setMaxLength(24);
                 when.setHint(Component.literal("all"));
                 when.setValue(s.when == null ? "" : s.when);
                 when.setResponder(v -> s.when = v);
+                when.setEditable(!readOnly);
                 this.addRenderableWidget(when);
                 x += whenW + gap;
             }
@@ -252,6 +267,7 @@ public final class MacroEditScreen extends Screen {
             delay.setMaxLength(5);
             delay.setValue(String.valueOf(s.delayMs));
             delay.setResponder(v -> s.delayMs = parse(v, 0, 60000));
+            delay.setEditable(!readOnly);
             this.addRenderableWidget(delay);
             x += delayW + gap;
 
@@ -268,7 +284,7 @@ public final class MacroEditScreen extends Screen {
             this.addRenderableWidget(Button.builder(Component.literal("x").withStyle(ChatFormatting.RED), b -> {
                 macro.steps.remove(idx);
                 this.rebuildWidgets();
-            }).bounds(x, ry, small, 20).build());
+            }).bounds(x, ry, small, 20).build()).active = !readOnly;
         }
 
         // Pager
@@ -277,9 +293,10 @@ public final class MacroEditScreen extends Screen {
             page--;
             this.rebuildWidgets();
         }).bounds(left, pagerY, 60, 20).build()).active = page > 0;
-        String viewing = view == null ? "all steps" : "steps for n=" + view;
-        this.addRenderableWidget(new StringWidget(left + 66, pagerY + 6, cw - 132, 9,
-                Component.literal("Page " + (page + 1) + " / " + pages + "  (" + count + " " + viewing + ")"), this.font));
+        String info = view == null
+                ? "Page " + (page + 1) + " / " + pages + "  (" + count + (hasTabs ? " shared steps)" : " steps)")
+                : "Page " + (page + 1) + " / " + pages + "  -  grey = shared (edit in All), yellow = n=" + view + " only";
+        this.addRenderableWidget(new StringWidget(left + 66, pagerY + 6, cw - 132, 9, Component.literal(info), this.font));
         this.addRenderableWidget(Button.builder(Component.literal("Next >"), b -> {
             page++;
             this.rebuildWidgets();

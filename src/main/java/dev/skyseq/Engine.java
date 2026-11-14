@@ -126,7 +126,7 @@ public final class Engine {
                 List<Step> first = new ArrayList<>();
                 for (Step s : steps) {
                     boolean waitOnly = s.type == Step.Type.WAIT || s.type == Step.Type.WAIT_OPEN || s.type == Step.Type.WAIT_CLOSE;
-                    if (!waitOnly && s.appliesTo(value)) {
+                    if (!waitOnly && applies(s)) {
                         first.add(s);
                         break;
                     }
@@ -134,6 +134,11 @@ public final class Engine {
                 steps.clear();
                 steps.addAll(first);
             }
+        }
+
+        /** "When n" tags only matter in Cycle and Repeat mode. */
+        private boolean applies(Step s) {
+            return macro.mode == Macro.Mode.ONCE || s.appliesTo(value);
         }
 
         void tick(Minecraft mc) {
@@ -165,7 +170,7 @@ public final class Engine {
                 return;
             }
 
-            while (index < steps.size() && !steps.get(index).appliesTo(value)) {
+            while (index < steps.size() && !applies(steps.get(index))) {
                 index++;
             }
             if (index >= steps.size()) {
