@@ -25,12 +25,20 @@ jobs:
       - name: Build
         run: gradle build --no-daemon
 
-      - name: Check mixin target (diagnostic)
+      - name: Check Minecraft input API (diagnostic)
         if: always()
         run: |
           CP=$(find ~/.gradle/caches -name '*.jar' | tr '\n' ':')
-          echo "=== MouseHandler ==="
-          javap -p -cp "$CP" net.minecraft.client.MouseHandler | grep -i "onButton\|onPress\|button" || echo "not found"
+          echo "=== KeyboardHandler ==="
+          javap -p -cp "$CP" net.minecraft.client.KeyboardHandler | grep -i "keyPress\|charTyped\|setup" || echo "not found"
+          echo "=== KeyEvent ==="
+          javap -p -cp "$CP" net.minecraft.client.input.KeyEvent || echo "not found"
+          echo "=== Window handle ==="
+          javap -p -cp "$CP" com.mojang.blaze3d.platform.Window | grep -i "handle\|getWindow" || echo "not found"
+          echo "=== InputConstants ==="
+          javap -p -cp "$CP" com.mojang.blaze3d.platform.InputConstants | grep -i "PRESS\|RELEASE\|REPEAT\|isKeyDown\|getKey" || echo "not found"
+          echo "=== lwjgl glfw present? ==="
+          find ~/.gradle/caches -name 'lwjgl-glfw*.jar' | head -2
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
