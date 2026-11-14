@@ -3,7 +3,8 @@
   "package": "dev.skyseq.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "MouseHandlerMixin"
+    "MouseHandlerMixin",
+    "KeyboardHandlerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import dev.skyseq.mixin.KeyboardHandlerAccessor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -23,6 +24,7 @@ public final class Engine {
 
     private static Runner active;
     private static final List<InputConstants.Key> pendingRelease = new ArrayList<>();
+    private static final List<KeyEvent> pendingKeyReleases = new ArrayList<>();
 
     private Engine() {
     }
@@ -33,6 +35,15 @@ public final class Engine {
                 KeyMapping.set(k, false);
             }
             pendingRelease.clear();
+        }
+        if (!pendingKeyReleases.isEmpty()) {
+            if (mc.getWindow() != null) {
+                KeyboardHandlerAccessor keyboard = (KeyboardHandlerAccessor) mc.keyboardHandler;
+                for (KeyEvent event : pendingKeyReleases) {
+                    keyboard.skyseq$keyPress(mc.getWindow().handle(), InputConstants.RELEASE, event);
+                }
+            }
+            pendingKeyReleases.clear();
         }
         // The bind button in the config screen also works from the title screen.
         if (Capture.active()) {
@@ -231,19 +242,15 @@ public final class Engine {
     }
 
     private static void pressKey(Minecraft mc, int code) {
-        if (code < 0) {
+        if (code < 0 || mc.getWindow() == null) {
             return;
         }
-        if (mc.gui.screen() != null) {
-            KeyEvent event = new KeyEvent(code, code, 0);
-            mc.gui.screen().keyPressed(event);
-            mc.gui.screen().keyReleased(event);
-        } else {
-            InputConstants.Key key = InputConstants.Type.KEYSYM.getOrCreate(code);
-            KeyMapping.set(key, true);
-            KeyMapping.click(key);
-            pendingRelease.add(key);
-        }
+        // Goes through the game's own keyboard handler: works the same in menus and in the world,
+        // and is seen by vanilla key mappings and other mods. The release is sent on the next tick.
+        KeyEvent event = new KeyEvent(code, 0, 0);
+        KeyboardHandlerAccessor keyboard = (KeyboardHandlerAccessor) mc.keyboardHandler;
+        keyboard.skyseq$keyPress(mc.getWindow().handle(), InputConstants.PRESS, event);
+        pendingKeyReleases.add(event);
     }
 
     private static void click(Minecraft mc, int button) {
