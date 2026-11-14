@@ -65,7 +65,7 @@ public final class Engine {
         if (m.mouse) {
             return MouseState.isDown(m.code);
         }
-        return InputConstants.isKeyDown(m.code);
+        return Keys.isDown(m.code);
     }
 
     private static long ms(int value) {
@@ -239,7 +239,7 @@ public final class Engine {
             mc.gui.screen().keyPressed(event);
             mc.gui.screen().keyReleased(event);
         } else {
-            InputConstants.Key key = InputConstants.Type.KEYBOARD.getOrCreate(code);
+            InputConstants.Key key = InputConstants.Type.KEYSYM.getOrCreate(code);
             KeyMapping.set(key, true);
             KeyMapping.click(key);
             pendingRelease.add(key);

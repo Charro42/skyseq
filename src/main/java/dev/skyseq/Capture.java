@@ -34,7 +34,7 @@ public final class Capture {
         if (cb == null) {
             return;
         }
-        if (InputConstants.isKeyDown(Keys.escape())) {
+        if (Keys.isDown(Keys.escape())) {
             callback = null;
             cb.accept(null);
             return;
@@ -42,7 +42,7 @@ public final class Capture {
 
         int foundKey = -1;
         for (int k : Keys.allKeys()) {
-            if (InputConstants.isKeyDown(k)) {
+            if (Keys.isDown(k)) {
                 foundKey = k;
                 break;
             }

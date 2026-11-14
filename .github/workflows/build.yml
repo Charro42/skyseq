@@ -25,6 +25,13 @@ jobs:
       - name: Build
         run: gradle build --no-daemon
 
+      - name: Check mixin target (diagnostic)
+        if: always()
+        run: |
+          CP=$(find ~/.gradle/caches -name '*.jar' | tr '\n' ':')
+          echo "=== MouseHandler ==="
+          javap -p -cp "$CP" net.minecraft.client.MouseHandler | grep -i "onButton\|onPress\|button" || echo "not found"
+
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:

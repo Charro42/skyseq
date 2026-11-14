@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
 
 /**
  * Key and mouse button names. Everything goes through Minecraft's own InputConstants so we never assume
@@ -83,6 +84,11 @@ public final class Keys {
     }
 
     private Keys() {
+    }
+
+    /** Is this key currently held down? */
+    public static boolean isDown(int key) {
+        return InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), key);
     }
 
     /** All key codes that can be polled/captured. */
@@ -166,7 +172,7 @@ public final class Keys {
 
     public static String keyName(int code) {
         try {
-            return InputConstants.Type.KEYBOARD.getOrCreate(code).getDisplayName().getString();
+            return InputConstants.Type.KEYSYM.getOrCreate(code).getDisplayName().getString();
         } catch (Throwable t) {
             return "Key " + code;
         }
