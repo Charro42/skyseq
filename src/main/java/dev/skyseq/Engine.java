@@ -108,20 +108,7 @@ public final class Engine {
 
         Runner(Macro m) {
             this.macro = m;
-            List<Step> copy = new ArrayList<>(m.steps);
-            if (Config.strictMode) {
-                // Strict mode: one action per keypress.
-                List<Step> first = new ArrayList<>();
-                for (Step s : copy) {
-                    if (s.type != Step.Type.WAIT && s.type != Step.Type.WAIT_OPEN && s.type != Step.Type.WAIT_CLOSE) {
-                        first.add(s);
-                        break;
-                    }
-                }
-                copy = first;
-            }
-            this.steps = copy;
-
+            this.steps = new ArrayList<>(m.steps);
             switch (m.mode) {
                 case CYCLE -> {
                     List<String> values = m.values();
@@ -133,6 +120,19 @@ public final class Engine {
                 }
                 default -> {
                 }
+            }
+            if (Config.strictMode) {
+                // Strict mode: one action per keypress (the first real action that applies to this value).
+                List<Step> first = new ArrayList<>();
+                for (Step s : steps) {
+                    boolean waitOnly = s.type == Step.Type.WAIT || s.type == Step.Type.WAIT_OPEN || s.type == Step.Type.WAIT_CLOSE;
+                    if (!waitOnly && s.appliesTo(value)) {
+                        first.add(s);
+                        break;
+                    }
+                }
+                steps.clear();
+                steps.addAll(first);
             }
         }
 
@@ -165,6 +165,9 @@ public final class Engine {
                 return;
             }
 
+            while (index < steps.size() && !steps.get(index).appliesTo(value)) {
+                index++;
+            }
             if (index >= steps.size()) {
                 nextIterationOrFinish(mc, now);
                 return;

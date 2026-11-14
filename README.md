@@ -62,3 +62,12 @@ A name matches any area containing it, so `dungeon` matches Dungeon Hub and dung
 
 You can put two keybinds on the same button: the one with an area filter wins whenever you are in a matching area,
 otherwise the other one runs. If both have filters (or neither does), the one higher in the list wins.
+
+## Different steps for each cycle number
+
+In **Cycle** (or **Repeat**) mode the editor shows tabs: **All | n=1 | n=2 | n=3 ...**.
+- **All** lists every step. Each step has a **When n** box: leave it blank to run for every number, or type numbers
+  like `1` or `1,3` to run only for those.
+- A number tab shows exactly what will run for that number (shared steps plus the ones tagged for it).
+  Steps you add while a number tab is open are tagged for that number automatically.
+- Click **Apply** after changing the cycle values to refresh the tabs.
