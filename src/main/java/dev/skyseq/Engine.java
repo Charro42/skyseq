@@ -172,6 +172,9 @@ public final class Engine {
             if (mc.gui.screen() != null) {
                 return "menu opened";
             }
+            if (macro.areas != null && !macro.areas.isBlank() && !Area.matches(macro.areas)) {
+                return "left the area";
+            }
             if (System.nanoTime() > until) {
                 return "time limit";
             }
