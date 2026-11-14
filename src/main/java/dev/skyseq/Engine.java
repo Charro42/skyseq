@@ -61,14 +61,25 @@ public final class Engine {
 
         boolean allow = Config.enabled && mc.gui.screen() == null && active == null;
         long now = System.nanoTime();
+        Macro pick = null;
         for (Macro m : Config.macros) {
             boolean down = m.enabled && m.code >= 0 && isDown(m);
             boolean pressed = down && !m.wasDown;
             m.wasDown = down;
-            if (pressed && allow && now >= m.cooldownUntil && !m.steps.isEmpty()) {
-                active = new Runner(m);
-                allow = false;
+            if (!pressed || !allow || now < m.cooldownUntil || m.steps.isEmpty()) {
+                continue;
             }
+            boolean restricted = m.areas != null && !m.areas.isBlank();
+            if (restricted && !Area.matches(m.areas)) {
+                continue;
+            }
+            // Area-restricted keybinds beat unrestricted ones on the same button; otherwise the one higher in the list wins.
+            if (pick == null || (restricted && (pick.areas == null || pick.areas.isBlank()))) {
+                pick = m;
+            }
+        }
+        if (pick != null) {
+            active = new Runner(pick);
         }
     }
 

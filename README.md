@@ -53,3 +53,12 @@ Hypixel SkyBlock currently allows 26.2 and 26.3 (this build is for 26.2).
 
 Everything is in `src/main/java/dev/skyseq/`. Edit a file on GitHub (pencil icon), commit, and the Actions tab builds a new jar.
 Default values: `Config.java` (`defaults()`), `Step.java`, `Macro.java`.
+
+## Only in certain areas (SkyBlock)
+
+Each keybind has an **Only in areas** box. Leave it blank to work everywhere, or type area names separated by commas,
+e.g. `garden` or `dungeon, catacombs`. The editor shows the area it currently detects (read from the tab list).
+A name matches any area containing it, so `dungeon` matches Dungeon Hub and dungeons; put `=` first (e.g. `=hub`) for an exact match.
+
+You can put two keybinds on the same button: the one with an area filter wins whenever you are in a matching area,
+otherwise the other one runs. If both have filters (or neither does), the one higher in the list wins.

@@ -110,20 +110,30 @@ public final class MacroEditScreen extends Screen {
                     this.rebuildWidgets();
                 }).bounds(left + cw - enW, 57, enW, 20).build());
 
+        // Area filter
+        this.addRenderableWidget(new StringWidget(left, 82, cw, 9,
+                Component.literal("Only in areas, e.g. garden, dungeon (blank = everywhere).  Now: " + Area.describe()), this.font));
+        EditBox areas = new EditBox(this.font, left, 92, cw, 20, Component.literal("Areas"));
+        areas.setMaxLength(120);
+        areas.setHint(Component.literal("everywhere"));
+        areas.setValue(macro.areas == null ? "" : macro.areas);
+        areas.setResponder(v -> macro.areas = v);
+        this.addRenderableWidget(areas);
+
         // Step list
         int typeW = 90;
         int delayW = 46;
         int small = 18;
         int gap = 3;
         int textW = cw - typeW - delayW - 3 * small - 4 * gap;
-        int headY = 83;
+        int headY = 118;
         this.addRenderableWidget(new StringWidget(left, headY, typeW, 9, Component.literal("Action"), this.font));
         this.addRenderableWidget(new StringWidget(left + typeW + gap, headY, textW, 9,
                 Component.literal("Command / key / button / menu title"), this.font));
         this.addRenderableWidget(new StringWidget(left + typeW + textW + 2 * gap, headY, delayW, 9,
                 Component.literal("Delay ms"), this.font));
 
-        int rowsTop = 95;
+        int rowsTop = 130;
         int rowH = 22;
         int perPage = Math.max(1, (this.height - 56 - rowsTop) / rowH);
         int count = macro.steps.size();

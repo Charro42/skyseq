@@ -38,6 +38,8 @@ public final class Macro {
     public int cooldownMs = 400;
     /** CYCLE mode: which value is used next. Saved so it survives restarts. */
     public int cycleIndex = 0;
+    /** Only run in these SkyBlock areas (comma-separated). Blank = everywhere. */
+    public String areas = "";
     public List<Step> steps = new ArrayList<>();
 
     // Runtime-only state (not saved).
