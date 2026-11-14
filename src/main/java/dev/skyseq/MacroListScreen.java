@@ -118,7 +118,7 @@ public final class MacroListScreen extends Screen {
     private static String label(Macro m) {
         String name = m.name == null || m.name.isBlank() ? "(unnamed)" : m.name;
         String what = m.mode == Macro.Mode.HOLD
-                ? "Hold " + (m.holdTarget == null || m.holdTarget.isBlank() ? "(not set)" : m.holdTarget.trim())
+                ? "Hold " + (m.holdTarget == null || m.holdTarget.isBlank() ? "(not set)" : Keys.holdName(m.holdTarget))
                 : m.mode.label + ", " + m.steps.size() + " steps";
         return name + "  [" + m.bindingName() + "]  " + what;
     }

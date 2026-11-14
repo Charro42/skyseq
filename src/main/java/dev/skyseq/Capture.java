@@ -11,6 +11,7 @@ public final class Capture {
 
     private static Consumer<int[]> callback;
     private static boolean armed;
+    private static boolean allowClicks;
 
     private Capture() {
     }
@@ -21,7 +22,13 @@ public final class Capture {
 
     /** Callback gets {1 = mouse / 0 = key, code}, or null if cancelled. */
     public static void start(Consumer<int[]> cb) {
+        start(cb, false);
+    }
+
+    /** With allowClicks, left and right click can be picked too (used for choosing what to hold). */
+    public static void start(Consumer<int[]> cb, boolean allowClicksToo) {
         callback = cb;
+        allowClicks = allowClicksToo;
         armed = false;
     }
 
@@ -50,6 +57,12 @@ public final class Capture {
         int left = InputConstants.MOUSE_BUTTON_LEFT;
         int right = InputConstants.MOUSE_BUTTON_RIGHT;
         int foundMouse = MouseState.firstExtraButton(left, right);
+        if (allowClicks && foundMouse < 0) {
+            for (int b : MouseState.snapshot()) {
+                foundMouse = b;
+                break;
+            }
+        }
         boolean leftOrRightDown = MouseState.isDown(left) || MouseState.isDown(right);
 
         // Wait until everything (including the click on the bind button) has been released first.

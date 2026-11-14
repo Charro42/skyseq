@@ -27,6 +27,7 @@ public final class MacroEditScreen extends Screen {
     private final Macro macro;
     private int page = 0;
     private boolean capturing = false;
+    private boolean capturingHold = false;
     /** null = "All" tab, otherwise the value being viewed. */
     private String view = null;
 
@@ -91,6 +92,7 @@ public final class MacroEditScreen extends Screen {
                 capturing = false;
             } else {
                 capturing = true;
+                capturingHold = false;
                 Capture.start(res -> {
                     capturing = false;
                     if (res != null) {
@@ -161,13 +163,27 @@ public final class MacroEditScreen extends Screen {
         if (isHold) {
             areaX = left + half + 2;
             areaW = half - 2;
-            this.addRenderableWidget(new StringWidget(left, 77, half, 9, Component.literal("Hold this  /  stop after (s)"), this.font));
-            EditBox target = new EditBox(this.font, left, 87, half - 2 - 46, 20, Component.literal("Hold target"));
-            target.setMaxLength(30);
-            target.setHint(Component.literal("w, shift, left click, mouse4"));
-            target.setValue(macro.holdTarget == null ? "" : macro.holdTarget);
-            target.setResponder(v -> macro.holdTarget = v);
-            this.addRenderableWidget(target);
+            this.addRenderableWidget(new StringWidget(left, 77, half, 9, Component.literal("Click to pick what to hold  /  stop after (s)"), this.font));
+            Component holdLabel = capturingHold
+                    ? Component.literal("> Press a key or button <").withStyle(ChatFormatting.YELLOW)
+                    : Component.literal(Keys.holdName(macro.holdTarget));
+            this.addRenderableWidget(Button.builder(holdLabel, b -> {
+                if (capturingHold) {
+                    Capture.cancel();
+                    capturingHold = false;
+                } else {
+                    capturingHold = true;
+                    capturing = false;
+                    Capture.start(res -> {
+                        capturingHold = false;
+                        if (res != null) {
+                            macro.holdTarget = (res[0] == 1 ? "mouse:" : "key:") + res[1];
+                        }
+                        this.rebuildWidgets();
+                    }, true);
+                }
+                this.rebuildWidgets();
+            }).bounds(left, 87, half - 2 - 46, 20).build());
             EditBox secs = new EditBox(this.font, left + half - 2 - 42, 87, 42, 20, Component.literal("Seconds"));
             secs.setMaxLength(3);
             secs.setValue(String.valueOf(macro.holdSeconds));
@@ -392,7 +408,7 @@ public final class MacroEditScreen extends Screen {
     @Override
     public boolean shouldCloseOnEsc() {
         // While waiting for a key press, Escape cancels the capture instead of closing the screen.
-        return !capturing;
+        return !capturing && !capturingHold;
     }
 
     @Override
@@ -404,6 +420,7 @@ public final class MacroEditScreen extends Screen {
     public void removed() {
         Capture.cancel();
         capturing = false;
+        capturingHold = false;
         Config.save();
     }
 }

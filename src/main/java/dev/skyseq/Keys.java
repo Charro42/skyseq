@@ -151,6 +151,16 @@ public final class Keys {
         if (s.isEmpty()) {
             return null;
         }
+        try {
+            if (s.startsWith("key:")) {
+                return new int[] {0, Integer.parseInt(s.substring(4))};
+            }
+            if (s.startsWith("mouse:")) {
+                return new int[] {1, Integer.parseInt(s.substring(6))};
+            }
+        } catch (NumberFormatException e) {
+            return null;
+        }
         switch (s) {
             case "leftclick", "lmb", "mouse1", "attack" -> {
                 return new int[] {1, InputConstants.MOUSE_BUTTON_LEFT};
@@ -172,6 +182,15 @@ public final class Keys {
         }
         int key = parseKey(raw);
         return key >= 0 ? new int[] {0, key} : null;
+    }
+
+    /** Nice display name for a stored hold target (picked with the button, or typed). */
+    public static String holdName(String raw) {
+        int[] t = parseHold(raw);
+        if (t == null) {
+            return raw == null || raw.isBlank() ? "(click to set)" : raw.trim();
+        }
+        return t[0] == 1 ? mouseName(t[1]) : keyName(t[1]);
     }
 
     public static String mouseName(int button) {
