@@ -15,7 +15,7 @@ public final class MacroListScreen extends Screen {
     private int armedDelete = -1;
 
     public MacroListScreen(Screen parent) {
-        super(Component.literal("SkySeq Macros"));
+        super(Component.literal("SkySeq"));
         this.parent = parent;
     }
 

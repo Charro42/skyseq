@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "skyseq",
   "version": "${version}",
-  "name": "SkySeq Macros",
+  "name": "SkySeq",
   "description": "Custom keybinds that run sequences of commands, key presses and clicks, with cycling (e.g. loadouts). Fully configurable in-game.",
   "authors": ["You"],
   "license": "MIT",
@@ -14,7 +14,7 @@
   "mixins": ["skyseq.mixins.json"],
   "depends": {
     "fabricloader": ">=0.19.0",
-    "minecraft": ">=26.3",
+    "minecraft": ">=26.2 <26.3",
     "java": ">=25",
     "fabric-api": "*"
   }

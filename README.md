@@ -1,11 +1,11 @@
-# SkySeq Macros (Fabric, Minecraft 26.3)
+# SkySeq (Fabric, Minecraft 26.2)
 
 Custom keybinds that run a sequence of commands, key presses, mouse clicks and waits. Supports cycling
 (e.g. Mouse 5 -> loadout 1, then 2, then 3, then back to 1). Everything is set up in-game; settings are
 saved to `config/skyseq.json`.
 
-Needs: Minecraft 26.3, Fabric Loader 0.19.5+, Fabric API, Java 25. Mod Menu is optional but gives you the config button.
-Hypixel SkyBlock currently allows 26.2 and 26.3.
+Needs: Minecraft 26.2, Fabric Loader 0.19.5+, Fabric API, Java 25. Mod Menu is optional but gives you the config button.
+Hypixel SkyBlock currently allows 26.2 and 26.3 (this build is for 26.2).
 
 ## Getting the .jar (no software needed, about 10 minutes)
 
@@ -20,13 +20,13 @@ Hypixel SkyBlock currently allows 26.2 and 26.3.
      makes the folders), paste in the contents of that file, and commit.
 4. Click the **Actions** tab. A run called "Build mod" starts by itself. Wait about 3-5 minutes for the green tick.
    - If it goes red, click the run, click the red step, copy the error text and send it to Claude.
-5. Click the finished run, scroll to **Artifacts**, download **skyseq-jar**. Unzip it: inside is `skyseq-1.0.0+26.3.jar`.
+5. Click the finished run, scroll to **Artifacts**, download **skyseq-jar**. Unzip it: inside is `skyseq-1.0.0+26.2.jar`.
 
 ## Installing
 
-1. Install Fabric for 26.3 (Modrinth App / Prism / the official Fabric installer).
-2. Put these three in the instance's `mods` folder: `skyseq-1.0.0+26.3.jar`, **Fabric API** (26.3) and (optional) **Mod Menu** (26.3).
-3. Start the game. Open **Mod Menu -> SkySeq Macros -> the config button**.
+1. Install Fabric for 26.2 (Modrinth App / Prism / the official Fabric installer).
+2. Put these three in the instance's `mods` folder: `skyseq-1.0.0+26.2.jar`, **Fabric API** (26.2) and (optional) **Mod Menu** (26.2).
+3. Start the game. Open **Mod Menu -> SkySeq -> the config button**.
 
 ## Using it
 
