@@ -167,7 +167,7 @@ public final class Engine {
             if (!mouse) {
                 allowed.add(code);
             }
-            this.until = System.nanoTime() + ms(Math.max(1, Math.min(600, macro.holdSeconds)) * 1000);
+            this.until = System.nanoTime() + Math.max(1, Math.min(600, macro.holdSeconds)) * 1_000_000_000L;
         }
 
         void begin() {
