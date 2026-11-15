@@ -10,7 +10,8 @@ public final class Step {
         ESCAPE("Escape", "close the open menu"),
         WAIT("Wait", "pause for the delay time"),
         WAIT_OPEN("Wait open", "wait until a menu opens"),
-        WAIT_CLOSE("Wait close", "wait until the menu closes");
+        WAIT_CLOSE("Wait close", "wait until the menu closes"),
+        RUN("Run keybind", "run another keybind by name, after this one finishes");
 
         public final String label;
         public final String help;

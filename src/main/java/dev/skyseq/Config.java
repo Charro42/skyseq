@@ -61,6 +61,9 @@ public final class Config {
                 if (m.mode == null) {
                     m.mode = Macro.Mode.ONCE;
                 }
+                if (m.mode == Macro.Mode.HOLD && m.holdSeconds == 60) {
+                    m.holdSeconds = 150; // old default; the new default is 2m30s
+                }
                 for (Step s : m.steps) {
                     if (s.type == null) {
                         s.type = Step.Type.WAIT;

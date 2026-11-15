@@ -295,7 +295,7 @@ public final class MacroEditScreen extends Screen {
 
             EditBox text = new EditBox(this.font, x, ry, textW, 20, Component.literal("Text"));
             text.setMaxLength(200);
-            boolean usesText = s.type == Step.Type.COMMAND || s.type == Step.Type.KEY
+            boolean usesText = s.type == Step.Type.COMMAND || s.type == Step.Type.KEY || s.type == Step.Type.RUN
                     || s.type == Step.Type.CLICK || s.type == Step.Type.WAIT_OPEN;
             text.setHint(Component.literal(hint(s.type)));
             if (usesText) {
@@ -394,6 +394,7 @@ public final class MacroEditScreen extends Screen {
             case ESCAPE -> "closes the open menu";
             case WAIT -> "just waits (see delay)";
             case WAIT_CLOSE -> "waits until menu closes";
+            case RUN -> "name of the keybind to run next";
         };
     }
 

@@ -97,12 +97,29 @@ public final class Engine {
             }
         }
         if (pick != null) {
-            if (pick.mode == Macro.Mode.HOLD) {
-                startHold(mc, pick);
-            } else {
-                active = new Runner(pick);
+            launch(mc, pick, 0);
+        }
+    }
+
+    /** Starts a keybind: a hold toggles on, anything else runs its steps. depth counts chained "Run keybind" calls. */
+    private static void launch(Minecraft mc, Macro m, int depth) {
+        if (m.mode == Macro.Mode.HOLD) {
+            startHold(mc, m);
+        } else {
+            active = new Runner(m, depth);
+        }
+    }
+
+    private static Macro findMacro(String name, Macro except) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        for (Macro m : Config.macros) {
+            if (m != except && m.name != null && m.name.trim().equalsIgnoreCase(name.trim())) {
+                return m;
             }
         }
+        return null;
     }
 
     private static void startHold(Minecraft mc, Macro m) {
@@ -110,6 +127,9 @@ public final class Engine {
         if (target == null) {
             status(mc, m.name + ": set what to hold first");
             return;
+        }
+        if (hold != null) {
+            hold.release();
         }
         hold = new Hold(m, target[0] == 1, target[1]);
         hold.begin();
@@ -233,7 +253,11 @@ public final class Engine {
         Step waitStep;
         long deadline;
 
-        Runner(Macro m) {
+        final int depth;
+        Macro pendingCall;
+
+        Runner(Macro m, int depth) {
+            this.depth = depth;
             this.macro = m;
             this.steps = new ArrayList<>(m.steps);
             switch (m.mode) {
@@ -252,7 +276,8 @@ public final class Engine {
                 // Strict mode: one action per keypress (the first real action that applies to this value).
                 List<Step> first = new ArrayList<>();
                 for (Step s : steps) {
-                    boolean waitOnly = s.type == Step.Type.WAIT || s.type == Step.Type.WAIT_OPEN || s.type == Step.Type.WAIT_CLOSE;
+                    boolean waitOnly = s.type == Step.Type.WAIT || s.type == Step.Type.WAIT_OPEN || s.type == Step.Type.WAIT_CLOSE
+                            || s.type == Step.Type.RUN; // chaining would defeat "one action per press"
                     if (!waitOnly && applies(s)) {
                         first.add(s);
                         break;
@@ -317,6 +342,17 @@ public final class Engine {
                 }
                 case WAIT -> {
                 }
+                case RUN -> {
+                    String target = resolve(s.text).trim();
+                    Macro t = findMacro(target, macro);
+                    if (t == null) {
+                        status(mc, macro.name + ": no other keybind called \"" + target + "\"");
+                    } else if (depth >= 4) {
+                        status(mc, macro.name + ": too many keybinds chained");
+                    } else {
+                        pendingCall = t;
+                    }
+                }
                 case WAIT_OPEN -> {
                     wait = Wait.OPEN;
                     waitStep = s;
@@ -351,6 +387,10 @@ public final class Engine {
             }
             macro.cooldownUntil = now + ms(macro.cooldownMs);
             active = null;
+            Macro next = pendingCall;
+            if (next != null && next.enabled && (next.areas == null || next.areas.isBlank() || Area.matches(next.areas))) {
+                launch(mc, next, depth + 1);
+            }
         }
 
         private void abort(Minecraft mc, String why) {
