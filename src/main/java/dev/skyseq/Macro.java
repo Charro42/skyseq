@@ -42,7 +42,7 @@ public final class Macro {
     /** HOLD mode: what to hold, e.g. "w", "shift", "left click", "mouse4". */
     public String holdTarget = "";
     /** HOLD mode: stop holding after this many seconds no matter what. */
-    public int holdSeconds = 150;
+    public int holdSeconds = 300;
     /** HOLD mode: keys you can still press without stopping the hold. */
     public String holdAllow = "w,a,s,d";
     /** Only run in these SkyBlock areas (comma-separated). Blank = everywhere. */
